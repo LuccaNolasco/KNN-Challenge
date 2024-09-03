@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, confusion_matrix, ConfusionMatrixDisplay, f1_score, recall_score, precision_score
 from Funcoes import *
 
 """ 
@@ -63,23 +63,48 @@ tabela_acuracia = pd.DataFrame({'k': valores_k, 'Acurácia': acuracia_k})
 #Aqui está a tabela
 print(tabela_acuracia)
 
-#Exibindo o gráfico
-plt.figure(figsize=(10, 6))
-plt.plot(valores_k, acuracia_k, marker='o')
-plt.title('Acurácia do KNN para Diferentes Valores de K')
-plt.xlabel('Número de Vizinhos (K)')
-plt.ylabel('Acurácia')
-plt.xticks(valores_k)  # Define os ticks do eixo x para serem os valores de K
-plt.grid()
-plt.show()
+# Reencontrando o melhor K para a matriz de confusão
+melhor_k = valores_k[acuracia_k.index(max(acuracia_k))]
+
+knn = KNeighborsClassifier(n_neighbors = melhor_k)
+knn.fit(X,Y)
+previsoesFinais = knn.predict(X_teste)
+
+#Criando e Exibindo a matriz de confusão
+matrizConfusao = confusion_matrix(y_teste, previsoesFinais)
+matrizConfusaoDisplay = ConfusionMatrixDisplay(matrizConfusao,display_labels=[0,1])
+
+#Criando os subplots pois quero ambos num lugar só
+fig, ax = plt.subplots(1, 2, figsize=(14, 6))
+
+# Plotando o gráfico de acurácia
+ax[0].plot(valores_k, acuracia_k, marker='o')
+ax[0].set_title('Acurácia do KNN para Diferentes Valores de K')
+ax[0].set_xlabel('Número de Vizinhos (K)')
+ax[0].set_ylabel('Acurácia')
+ax[0].set_xticks(valores_k)
+ax[0].grid(True)
+
+# Plotando a matriz de confusão
+matrizConfusaoDisplay.plot(ax=ax[1], cmap='plasma', values_format='d')
+ax[1].set_title(f'Matriz de Confusão (K = {melhor_k})')
+
+plt.tight_layout()
+
+
+precisao = precision_score(y_teste, previsoesFinais)
+recall = recall_score(y_teste, previsoesFinais)
+f1 = f1_score(y_teste, previsoesFinais)
+
+print(f"\nPrecisão para K = {melhor_k}: {precisao:.4f}\n"
+      f"Recall para K = {melhor_k}: {recall:.4f}\n"
+      f"F1 Score para K = {melhor_k}: {f1:.4f}")
 
 print(f"\nConclusões: Apesar de certos valores posteriores possuírem maior acurácia que seus antecessores,\n"
       f"no geral a acurácia tende a cair à medida que o valor de K aumenta. Os valores para K= 3 e K = 5\n"
-      f"mostraram-se extremamente semelhantes, então é válido usar K=3 para reduzir o custo computacional.")
+      f"mostraram-se extremamente semelhantes, então é válido usar K=3 para reduzir o custo computacional.\n"
+      f"A precisão indica cerca de 94% de verdadeiros positivos previstos, creio que possa haver uma melhora.\n"
+      f"O recall de cerca de 98% é bom. O modelo indentificou corretamente quase todas as instâncias de petróleo\n"
+      f"Um bom valor da média harmõnica de 96.5% mostra que é equilibrado,")
 
-
-"""
-Conclusões: Apesar de certos valores posteriores possuirem maior acurácia que seus antecessores, no geral a 
-acurácia tende a cair à medida que o valor de K aumenta. Os valores para K= 3 e K = 5 mostraram-se extremamente
-semelhantes, então é válido usar K=3 para reduzir o custo computacional
-"""
+plt.show()
