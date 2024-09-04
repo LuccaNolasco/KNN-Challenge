@@ -32,7 +32,6 @@ testeNormalizado = pd.DataFrame(normalizador.transform(dataFrame_teste[['x','y']
 testeNormalizado['petroleo'] = dataFrame_teste['petroleo'].values
 
 
-
 # 4 preparando o algoritmo e previsoes iniciais
 
 # Aqui, dividi as características e as etiquetas
@@ -108,3 +107,45 @@ print(f"\nConclusões: Apesar de certos valores posteriores possuírem maior acu
       f"Um bom valor da média harmõnica de 96.5% mostra que é equilibrado,")
 
 plt.show()
+
+#Agora quero comparar com e sem os dados normalizados
+
+X_treinoSemNormalizar = dataFrame_treino [['x','y']]
+y_treinoSemNormalizar = dataFrame_treino['petroleo']
+valores_kSemNormalizar, acuracia_kSemNormalizar = testarK(dataFrame_teste,3,30,X_treinoSemNormalizar,y_treinoSemNormalizar)
+
+fig, ax = plt.subplots(2, 2, figsize=(14, 6))
+
+ax[0][0].plot(valores_k, acuracia_k, marker='o')
+ax[0][0].set_title('Acurácia do KNN para Diferentes Valores de K: Valores normalizados')
+ax[0][0].set_xlabel('Número de Vizinhos (K)')
+ax[0][0].set_ylabel('Acurácia')
+ax[0][0].set_xticks(valores_k)
+ax[0][0].grid(True)
+matrizConfusaoDisplay.plot(ax=ax[0][1], cmap='plasma', values_format='d')
+ax[0][1].set_title(f'Matriz de Confusão (K = {melhor_k}) Normalizado')
+
+
+#Criando e Exibindo a matriz de confusão sem normalizar
+X_testeSemNormalizar = dataFrame_teste[['x','y']]
+y_testeSemNormalizar = dataFrame_teste['petroleo']
+
+melhor_kSemNormalizar = valores_kSemNormalizar[acuracia_kSemNormalizar.index(max(acuracia_kSemNormalizar))]
+knn = KNeighborsClassifier(n_neighbors = melhor_kSemNormalizar)
+knn.fit(X_treinoSemNormalizar,y_treinoSemNormalizar)
+previsoesFinais = knn.predict(X_testeSemNormalizar)
+matrizConfusaoSemNormalizar = confusion_matrix(y_testeSemNormalizar, previsoesFinais)
+matrizConfusaoDisplaySemNormalizar = ConfusionMatrixDisplay(matrizConfusaoSemNormalizar,display_labels=[0,1])
+
+ax[1][0].plot(valores_kSemNormalizar, acuracia_kSemNormalizar, marker='o')
+ax[1][0].set_title('Acurácia do KNN para Diferentes Valores de K: Valores sem normalizar')
+ax[1][0].set_xlabel('Número de Vizinhos (K)')
+ax[1][0].set_ylabel('Acurácia')
+ax[1][0].set_xticks(valores_k)
+ax[1][0].grid(True)
+matrizConfusaoDisplaySemNormalizar.plot(ax=ax[1][1], cmap='plasma', values_format='d')
+ax[1][1].set_title(f'Matriz de Confusão (K = {melhor_k}) sem Normalizar')
+
+plt.tight_layout()
+plt.show()
+
